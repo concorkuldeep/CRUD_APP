@@ -1,12 +1,12 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native';
-import LoginScreen from './src/screens/auth/LoginScreen'
-
+import { StyleSheet} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import RootStack from './src/navigation/RootStack'
 const App = () => {
   return (
-    <View style={{ flex: 1, backgroundColor: 'red' }}>
-      <LoginScreen navigation={null} />
-    </View>
+    <NavigationContainer>
+      <RootStack />
+    </NavigationContainer>
   )
 }
 

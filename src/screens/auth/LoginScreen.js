@@ -15,16 +15,19 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useAxios } from '../../customHooks/useAxios';
+import { ApiPath } from '../../constant/ApiUrl';
+import { saveTokens } from '../../services/authService';
 
 const LoginScreen = ({ navigation }) => {
+    const { post, loading } = useAxios()
+
     const [inputs, setInputs] = useState({
         email: '',
         password: '',
     });
     const [errors, setErrors] = useState({});
-    const [loading, setLoading] = useState(false);
     const [secureTextEntry, setSecureTextEntry] = useState(true);
-
     const validate = () => {
         let valid = true;
         let errors = {};
@@ -51,17 +54,25 @@ const LoginScreen = ({ navigation }) => {
 
     const handleLogin = async () => {
         if (validate()) {
-            setLoading(true);
-            // Simulate API call
-            setTimeout(async () => {
-                setLoading(false);
-                // Replace with actual API call
-                // const response = await authService.login(inputs.email, inputs.password);
+            try {
 
-                // For demo - success
+                const bodyJson = {
+                    email: inputs.email,
+                    password: inputs.password
+                }
+                const response = await post(ApiPath.Login, bodyJson)
+                await saveTokens(
+                    response.data.token,
+                    response?.data?.refreshToken,
+                    JSON.stringify(response.data?.user)
+                )
+
                 Alert.alert('Success', 'Logged in successfully!');
-                navigation.navigate('Home');
-            }, 1500);
+                navigation.navigate('Home')
+            } catch (error) {
+                console.log("Error loging -->>", error)
+                Alert.alert('Error !', error?.response?.data?.message || 'Login failed');
+            }
         }
     };
 
@@ -146,11 +157,11 @@ const LoginScreen = ({ navigation }) => {
                         </View>
 
                         {/* Forgot Password */}
-                        <TouchableOpacity
+                        {/* <TouchableOpacity
                             onPress={() => navigation.navigate('ForgotPassword')}
                             style={styles.forgotPassword}>
                             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
                         {/* Login Button */}
                         <TouchableOpacity
