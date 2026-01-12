@@ -77,7 +77,8 @@ axiosInstance.interceptors.request.use(
         return config;
     },
     (error) => {
-        return Promise.reject(error)
+        return Promise.reject(error.response?.data || error);
+
     }
 )
 
@@ -117,7 +118,8 @@ axiosInstance.interceptors.response.use(
                 isRefreshing = false
             }
         }
-        return Promise.reject(error)
+        return Promise.reject(error.response?.data || error);
+
 
     }
 )

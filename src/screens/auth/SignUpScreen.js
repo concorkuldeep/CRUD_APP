@@ -19,6 +19,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import CheckBox from 'react-native-check-box';
 import { useAxios } from '../../customHooks/useAxios';
 import { ApiPath } from '../../constant/ApiUrl';
+import DropDownPicker from 'react-native-dropdown-picker';
+import { roleItems } from '../../constant/constants';
 
 const SignupScreen = ({ navigation }) => {
     const { post, loading, error } = useAxios();
@@ -37,6 +39,9 @@ const SignupScreen = ({ navigation }) => {
     const [isChecked, setIsChecked] = useState(false);
     const [termsModalVisible, setTermsModalVisible] = useState(false);
     const [showPasswordCriteria, setShowPasswordCriteria] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [value, setValue] = useState(null);
+    const [items, setItems] = useState(roleItems)
 
     const passwordCriteria = [
         { label: 'At least 8 characters', met: inputs.password.length >= 8 },
@@ -94,6 +99,11 @@ const SignupScreen = ({ navigation }) => {
             valid = false;
         }
 
+        if (!value) {
+            errors.role = 'Please select role';
+            valid = false;
+        } 
+
         // Terms validation
         if (!isChecked) {
             Alert.alert('Terms Required', 'Please accept the terms and conditions');
@@ -111,10 +121,11 @@ const SignupScreen = ({ navigation }) => {
                     "name": inputs.fullName,
                     "email": inputs.email,
                     "password": inputs.password,
-                    "phone": inputs.phone
+                    "phone": inputs.phone,
+                    "role":value
                 }
+
                 const response = await post(ApiPath.Register, JSON.stringify(bodyJson))
-                console.log("Response from Signup Screen -->>>", response)
 
                 if (response?.success) {
                     Alert.alert('Success', `${response?.message}`)
@@ -140,7 +151,6 @@ const SignupScreen = ({ navigation }) => {
             }));
         }
     };
-
 
     const TermsModal = () => (
         <Modal
@@ -194,7 +204,9 @@ By creating an account, you agree to these terms and conditions.`}
                 style={styles.keyboardView}>
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}>
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
 
                     {/* Header */}
                     <View style={styles.header}>
@@ -266,6 +278,39 @@ By creating an account, you agree to these terms and conditions.`}
                             </View>
                             {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
                         </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.inputLabel}>Phone Number</Text>
+                            {/* <View style={styles.inputWrapper}> */}
+                            <DropDownPicker
+                                open={open}
+                                value={value}
+                                items={items}
+                                setOpen={setOpen}
+                                setValue={setValue}
+                                setItems={setItems}
+                                schema={{
+                                    label: 'role',
+                                    value: 'role'
+                                }}
+                                maxHeight={120}
+                                listMode="SCROLLVIEW"
+                                style={{
+                                    borderWidth: 1.5,
+                                    borderColor: '#e1e1e1',
+                                    borderRadius: 14,
+                                    backgroundColor: '#fafafa',
+                                }}
+                            
+                            />
+
+                            {/* </View> */}
+                        </View>
+
+
+
+
+
 
                         {/* Password */}
                         <View style={styles.inputContainer}>

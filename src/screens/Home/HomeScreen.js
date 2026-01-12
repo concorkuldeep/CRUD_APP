@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAxios } from '../../customHooks/useAxios';
-import { clearTokens, getAccessToken } from '../../services/authService';
+import { clearTokens } from '../../services/authService';
 import { ApiPath } from '../../constant/ApiUrl';
 import { formatDate } from '../../constant/constants';
 
@@ -23,9 +23,6 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     fetchUserProfile();
 
-    setInterval(()=>{
-      fetchUserProfile()
-    },25000)
   }, []);
   const fetchUserProfile = async () => {
     try {
@@ -102,6 +99,17 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.label}>Created at</Text>
           <Text style={styles.value}>{formatDate(userData?.createdAt) || 'N/A'}</Text>
         </View>
+
+        <View style={styles.separator} />
+
+<View style={styles.cardItem}>
+  <Text style={styles.label}>Role</Text>
+  <Text style={styles.value}>{userData?.role || 'N/A'}</Text>
+</View>
+
+
+
+
       </View>
     </SafeAreaView>
   );

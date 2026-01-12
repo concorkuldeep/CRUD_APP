@@ -14,3 +14,11 @@ export function formatDate(isoString) {
     return `${day}/${month}/${year}`;
 }
 
+export const roleItems = [{
+    id:1,
+    role:'Admin'
+},{
+    id:2,
+    role:'User'
+}]
+
