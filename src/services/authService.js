@@ -8,7 +8,7 @@ export const saveTokens = async (accessToken, refreshToken, userDetails) => {
             await Keychain.setInternetCredentials('auth', 'refreshToken', refreshToken);
         }
         if (userDetails) {
-            await Keychain.setInternetCredentials('user', 'userDetails', userDetails)
+            await Keychain.setInternetCredentials('user', 'userDetails', JSON.stringify(userDetails))
         }
         return true;
     } catch (e) {
@@ -44,11 +44,24 @@ export const getRefreshToken = async () => {
     }
 };
 
+export const getUserDetails = async()=>{
+    try {
+        const userDetails = await Keychain.getInternetCredentials('user');
+        if(userDetails){
+            return userDetails.password
+        }
+        return null;
+    } catch (error) {
+        console.error('Error getting user details :', error);
+        return null;
+    }
+}
+
 export const clearTokens = async () => {
     try {
         await Keychain.resetGenericPassword();
-        await Keychain.resetInternetCredentials('auth');
-        await Keychain.resetInternetCredentials('user')
+        await Keychain.resetInternetCredentials( {server :'auth'});
+        await Keychain.resetInternetCredentials({server :'user'})
         return true;
     } catch (error) {
         console.error('Error clearing tokens:', error);

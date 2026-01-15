@@ -64,14 +64,14 @@ const LoginScreen = ({ navigation }) => {
                 await saveTokens(
                     response.data.token,
                     response?.data?.refreshToken,
-                    JSON.stringify(response.data?.user)
+                    response.data?.user
                 )
 
                 Alert.alert('Success', 'Logged in successfully!');
                 navigation.navigate('Home')
             } catch (error) {
                 console.log("Error loging -->>", error)
-                Alert.alert('Error !', error?.response?.data?.message || 'Login failed');
+                Alert.alert('Error !', error?.message || 'Login failed');
             }
         }
     };
