@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,6 +12,8 @@ import {
   TextInput,
   FlatList,
   RefreshControl,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAxios } from '../../customHooks/useAxios';
@@ -19,8 +21,9 @@ import { clearTokens } from '../../services/authService';
 import { ApiPath } from '../../constant/ApiUrl';
 import { formatDate } from '../../constant/constants';
 
-const HomeScreen = ({ navigation }) => {
+const { width } = Dimensions.get('window');
 
+const HomeScreen = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +38,11 @@ const HomeScreen = ({ navigation }) => {
     priority: 'low',
   });
   const [taskErrors, setTaskErrors] = useState({});
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
+
+  // Animation values
+  const flipAnimation = useRef(new Animated.Value(0))?.current;
+  const scaleAnimation = useRef(new Animated.Value(1))?.current;
 
   const { get, post } = useAxios();
 
@@ -92,6 +100,50 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
+  // =============== CARD FLIP ANIMATION ===============
+  const flipCard = () => {
+    Animated.parallel([
+      Animated.timing(scaleAnimation, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(flipAnimation, {
+        toValue: isCardFlipped ? 0 : 180,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      scaleAnimation.setValue(1);
+      setIsCardFlipped(!isCardFlipped);
+    });
+  };
+
+  const frontInterpolate = flipAnimation.interpolate({
+    inputRange: [0, 180],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const backInterpolate = flipAnimation.interpolate({
+    inputRange: [0, 180],
+    outputRange: ['180deg', '360deg'],
+  });
+
+  const frontAnimatedStyle = {
+    transform: [
+      { rotateY: frontInterpolate },
+      { scale: scaleAnimation },
+    ],
+  };
+
+  const backAnimatedStyle = {
+    transform: [
+      { rotateY: backInterpolate },
+      { scale: scaleAnimation },
+    ],
+  };
+
+  // =============== TASK FUNCTIONS ===============
   const validateTask = () => {
     let valid = true;
     let errors = {};
@@ -160,10 +212,8 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-
   const handleUpdateTask = async () => {
     if (!validateTask() || !selectedTask) return;
-
 
     try {
       setLoading(true);
@@ -189,7 +239,6 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleDeleteTask = (taskId) => {
-
     Alert.alert(
       'Delete Task',
       'Are you sure you want to delete this task?',
@@ -359,41 +408,150 @@ const HomeScreen = ({ navigation }) => {
           />
         }
       >
-        {/* User Profile Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Profile Information</Text>
+        {/* 3D Flip Profile Card */}
+        <View style={styles.cardContainer}>
+          <TouchableOpacity
+            style={styles.flipButton}
+            onPress={flipCard}
+            activeOpacity={0.8}
+          >
+            <Animated.View
+              style={[styles.card, styles.cardFront, frontAnimatedStyle]}
+            >
+              {/* Front of Card - Profile Info */}
+              <View style={styles.cardGradient} />
+              <View style={styles.cardContent}>
+                <View style={styles.cardHeader}>
+                  <Icon name="account-circle" size={40} color="#fff" />
+                  <View style={styles.userInfo}>
+                    <Text style={styles.cardName}>{userData?.name || 'User'}</Text>
+                    <Text style={styles.cardRole}>{userData?.role || 'Member'}</Text>
+                  </View>
+                  <View style={styles.flipHint}>
+                    <Icon name="rotate-3d" size={20} color="rgba(255,255,255,0.7)" />
+                    <Text style={styles.flipHintText}>Tap to flip</Text>
+                  </View>
+                </View>
 
-          <View style={styles.cardItem}>
-            <Text style={styles.label}>Name</Text>
-            <Text style={styles.value}>{userData?.name || 'N/A'}</Text>
-          </View>
+                <View style={styles.cardDivider} />
 
-          <View style={styles.separator} />
+                <View style={styles.cardDetails}>
+                  <View style={styles.detailRow}>
+                    <Icon name="email" size={16} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.detailText} numberOfLines={1}>
+                      {userData?.email || 'N/A'}
+                    </Text>
+                  </View>
 
-          <View style={styles.cardItem}>
-            <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>{userData?.email || 'N/A'}</Text>
-          </View>
+                  <View style={styles.detailRow}>
+                    <Icon name="phone" size={16} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.detailText}>
+                      {userData?.phone || userData?.mobile || 'N/A'}
+                    </Text>
+                  </View>
 
-          <View style={styles.separator} />
+                  <View style={styles.detailRow}>
+                    <Icon name="calendar" size={16} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.detailText}>
+                      Joined {formatDate(userData?.createdAt) || 'N/A'}
+                    </Text>
+                  </View>
+                </View>
 
-          <View style={styles.cardItem}>
-            <Text style={styles.label}>Mobile</Text>
-            <Text style={styles.value}>{userData?.phone || userData?.mobile || 'N/A'}</Text>
-          </View>
 
-          <View style={styles.separator} />
+              </View>
 
-          <View style={styles.cardItem}>
-            <Text style={styles.label}>Role</Text>
-            <Text style={styles.value}>{userData?.role || 'N/A'}</Text>
-          </View>
+              {/* Decorative elements */}
+              <View style={styles.cardPattern}>
+                <View style={styles.patternCircle1} />
+                <View style={styles.patternCircle2} />
+                <View style={styles.patternCircle3} />
+              </View>
+            </Animated.View>
 
-          <View style={styles.separator} />
+            <Animated.View
+              style={[styles.card, styles.cardBack, backAnimatedStyle]}
+            >
+              {/* Back of Card - Additional Info */}
+              <View style={styles.cardGradientBack} />
+              <View style={styles.cardContent}>
+                <View style={styles.cardHeaderBack}>
+                  <Text style={styles.backTitle}>User Statistics</Text>
+                  <Icon name="chart-line" size={40} color="#fff" />
+                </View>
 
-          <View style={styles.cardItem}>
-            <Text style={styles.label}>Joined</Text>
-            <Text style={styles.value}>{formatDate(userData?.createdAt) || 'N/A'}</Text>
+                <View style={styles.statsContainer}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{tasks.length}</Text>
+                    <Text style={styles.statLabel}>Total Tasks</Text>
+                  </View>
+
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>
+                      {tasks.filter(t => t.status === 'completed').length}
+                    </Text>
+                    <Text style={styles.statLabel}>Completed</Text>
+                  </View>
+
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>
+                      {tasks.filter(t => t.status === 'pending').length}
+                    </Text>
+                    <Text style={styles.statLabel}>Pending</Text>
+                  </View>
+                </View>
+
+                <View style={styles.cardDividerBack} />
+
+                <View style={styles.additionalInfo}>
+                  <View style={styles.infoRow}>
+                    <Icon name="clock-outline" size={16} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.infoText}>
+                      Last Login: Today
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Icon name="shield-check" size={16} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.infoText}>
+                      Account: Verified
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Icon name="star" size={16} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.infoText}>
+                      Member Since: {new Date(userData?.createdAt).getFullYear() || '2024'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.cardFooterBack}>
+                  <Text style={styles.backHint}>Flip to front</Text>
+                  <Text style={styles.cardIdBack}>ID: {userData?._id?.substring(0, 8) || 'USER'}</Text>
+                </View>
+              </View>
+
+              {/* Decorative elements for back */}
+              <View style={styles.cardPatternBack}>
+                <View style={styles.patternLine1} />
+                <View style={styles.patternLine2} />
+                <View style={styles.patternLine3} />
+              </View>
+
+              {/* Magnetic strip */}
+              <View style={styles.magneticStrip} />
+
+
+            </Animated.View>
+          </TouchableOpacity>
+
+          {/* Flip instruction */}
+          <View style={styles.flipInstruction}>
+            <Icon name="gesture-tap" size={16} color="#666" />
+            <Text style={styles.flipInstructionText}>
+              Tap card to {isCardFlipped ? 'see profile' : 'view statistics'}
+            </Text>
           </View>
         </View>
 
@@ -614,43 +772,293 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  // 3D Card Styles
+  cardContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  flipButton: {
+    width: width - 40,
+    height: 220,
+  },
   card: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    margin: 16,
-    padding: 0,
-    elevation: 2,
+    backfaceVisibility: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+    overflow: 'hidden',
   },
-  cardTitle: {
-    fontSize: 18,
+  cardFront: {
+    backgroundColor: 'transparent',
+  },
+  cardBack: {
+    backgroundColor: 'transparent',
+  },
+  cardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#667eea',
+    backgroundImage: 'linear-gradient(to right, #667eea 0%, #764ba2 100%)',
+  },
+  cardGradientBack: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#f093fb',
+    backgroundImage: 'linear-gradient(to right, #f093fb 0%, #f5576c 100%)',
+  },
+  cardContent: {
+    flex: 1,
+    padding: 20,
+    zIndex: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  userInfo: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  cardName: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  cardItem: {
-    padding: 16,
-  },
-  label: {
-    fontSize: 12,
-    color: '#666',
+    color: '#fff',
     marginBottom: 4,
   },
-  value: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
+  cardRole: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
   },
-  separator: {
+  flipHint: {
+    alignItems: 'center',
+  },
+  flipHintText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+  },
+  cardDivider: {
     height: 1,
-    backgroundColor: '#e0e0e0',
-    marginHorizontal: 16,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 20,
   },
+  cardDetails: {
+    flex: 1,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#fff',
+    marginLeft: 10,
+    flex: 1,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  // Card Back Styles
+  cardHeaderBack: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  backTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  cardDividerBack: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 20,
+  },
+  additionalInfo: {
+    flex: 1,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#fff',
+    marginLeft: 10,
+    flex: 1,
+  },
+  cardFooterBack: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  backHint: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    fontStyle: 'italic',
+  },
+  cardIdBack: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    fontFamily: 'monospace',
+  },
+  // Decorative Elements
+  cardPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
+  patternCircle1: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    top: -30,
+    right: -30,
+  },
+  patternCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    bottom: -20,
+    left: -20,
+  },
+  patternCircle3: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    top: '50%',
+    left: '30%',
+  },
+  cardPatternBack: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
+  patternLine1: {
+    position: 'absolute',
+    width: '80%',
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    top: '25%',
+    left: '10%',
+    transform: [{ rotate: '15deg' }],
+  },
+  patternLine2: {
+    position: 'absolute',
+    width: '80%',
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    top: '50%',
+    left: '10%',
+    transform: [{ rotate: '-15deg' }],
+  },
+  patternLine3: {
+    position: 'absolute',
+    width: '80%',
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    top: '75%',
+    left: '10%',
+    transform: [{ rotate: '15deg' }],
+  },
+  magneticStrip: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    height: 40,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  signatureStrip: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    alignItems: 'flex-end',
+  },
+  signatureText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 4,
+  },
+  signatureLine: {
+    width: 80,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  flipInstruction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  flipInstructionText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 6,
+  },
+  // Tasks Section
   tasksSection: {
     margin: 16,
     marginTop: 8,
@@ -762,6 +1170,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
+  // Modal Styles
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
