@@ -261,7 +261,7 @@ By creating an account, you agree to these terms and conditions.`}
                             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
                         </View>
 
-                        {/* Phone (Optional) */}
+                        {/* Phone  */}
                         <View style={styles.inputContainer}>
                             <Text style={styles.inputLabel}>Phone Number</Text>
                             <View style={styles.inputWrapper}>
@@ -280,8 +280,7 @@ By creating an account, you agree to these terms and conditions.`}
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>Phone Number</Text>
-                            {/* <View style={styles.inputWrapper}> */}
+                            <Text style={styles.inputLabel}>User Type</Text>
                             <DropDownPicker
                                 open={open}
                                 value={value}
@@ -295,6 +294,7 @@ By creating an account, you agree to these terms and conditions.`}
                                 }}
                                 maxHeight={120}
                                 listMode="SCROLLVIEW"
+                                placeholder='Select User Type'
                                 style={{
                                     borderWidth: 1.5,
                                     borderColor: '#e1e1e1',
@@ -304,7 +304,6 @@ By creating an account, you agree to these terms and conditions.`}
                             
                             />
 
-                            {/* </View> */}
                         </View>
 
 

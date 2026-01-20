@@ -28,7 +28,6 @@ const HomeScreen = ({ navigation }) => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
   const [taskModalVisible, setTaskModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [taskForm, setTaskForm] = useState({
