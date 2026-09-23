@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "81591571920",
+    "project_id": "task-manager-3b5a5",
+    "storage_bucket": "task-manager-3b5a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:81591571920:android:9afd897940a8f62f81d5d5",
+        "android_client_info": {
+          "package_name": "com.crud_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB48eJLmj4vrkoIsFa-86O339m-33eGX4k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -6,7 +6,6 @@ import {
     TextInput,
     TouchableOpacity,
     StyleSheet,
-    SafeAreaView,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -18,6 +17,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAxios } from '../../customHooks/useAxios';
 import { ApiPath } from '../../constant/ApiUrl';
 import { saveTokens } from '../../services/authService';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LoginScreen = ({ navigation }) => {
     const { post, loading } = useAxios()
@@ -28,6 +29,8 @@ const LoginScreen = ({ navigation }) => {
     });
     const [errors, setErrors] = useState({});
     const [secureTextEntry, setSecureTextEntry] = useState(true);
+    const [googleLoading, setGoogleLoading] = useState(false);
+
     const validate = () => {
         let valid = true;
         let errors = {};
@@ -50,6 +53,28 @@ const LoginScreen = ({ navigation }) => {
 
         setErrors(errors);
         return valid;
+    };
+
+    const handleGoogleLogin = async () => {
+        if (googleLoading) {
+            return;
+        }
+
+        try {
+            setGoogleLoading(true);
+
+            await GoogleSignin.hasPlayServices();
+
+            const response = await GoogleSignin.signIn();
+
+            console.log('GOOGLE RESPONSE:', response);
+
+        } catch (error) {
+            console.log('GOOGLE LOGIN ERROR:', error);
+
+        } finally {
+            setGoogleLoading(false);
+        }
     };
 
     const handleLogin = async () => {
@@ -184,7 +209,10 @@ const LoginScreen = ({ navigation }) => {
 
                         {/* Social Login */}
                         <View style={styles.socialContainer}>
-                            <TouchableOpacity style={styles.socialButton}>
+                            <TouchableOpacity
+                                onPress={handleGoogleLogin}
+                                disabled={googleLoading}
+                                style={styles.socialButton}>
                                 <Icon name="google" size={24} color="#DB4437" />
                                 <Text style={styles.socialButtonText}>Google</Text>
                             </TouchableOpacity>
