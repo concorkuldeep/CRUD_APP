@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAnZwMxChJTZ1ar_wVNvgE_TFE6ATBlDEg</string>
+	<key>GCM_SENDER_ID</key>
+	<string>81591571920</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>org.reactjs.native.example.CRUD-APP</string>
+	<key>PROJECT_ID</key>
+	<string>task-manager-3b5a5</string>
+	<key>STORAGE_BUCKET</key>
+	<string>task-manager-3b5a5.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:81591571920:ios:7517e819bf9087dd81d5d5</string>
+	<key>CLIENT_ID</key>
+<string>652864874360-atcl6vkhidm428mvlsk92rnqhbd3u2jg.apps.googleusercontent.com</string>
+<key>REVERSED_CLIENT_ID</key>
+<string>652864874360-atcl6vkhidm428mvlsk92rnqhbd3u2jg.apps.googleusercontent.com</string>
+</dict>
+</plist>

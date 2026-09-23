@@ -2,12 +2,13 @@ import React,{useEffect} from 'react'
 import { StyleSheet} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import RootStack from './src/navigation/RootStack'
-import {GOOGLE_WEB_CLIENT_ID} from './src/config/googleConfig'
+import {GOOGLE_WEB_CLIENT_ID,IOS_CLIENT_ID} from './src/config/googleConfig'
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 const App = () => {
   useEffect(() => {
     GoogleSignin.configure({
         webClientId: GOOGLE_WEB_CLIENT_ID,
+        iosClientId: IOS_CLIENT_ID,
     });
 }, []);
   return (
