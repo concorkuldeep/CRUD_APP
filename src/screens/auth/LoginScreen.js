@@ -103,6 +103,7 @@ const LoginScreen = ({ navigation }) => {
                     password: inputs.password
                 }
                 const response = await post(ApiPath.Login, bodyJson)
+
                 await saveTokens(
                     response.data.token,
                     response?.data?.refreshToken,

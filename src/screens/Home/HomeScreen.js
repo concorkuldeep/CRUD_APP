@@ -54,6 +54,10 @@ const HomeScreen = ({ navigation }) => {
     try {
       const response = await get(ApiPath.GetProfileDetail);
       setUserData(response.data?.user);
+      const userResponse = await get(ApiPath.userDetails);
+      console.log("User Response : ",userResponse)
+
+
     } catch (error) {
       console.error('Profile error:', error);
     }

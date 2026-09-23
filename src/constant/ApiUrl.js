@@ -7,5 +7,6 @@ export const ApiPath = {
     CreateTask:`task/createTask`,
     DeleteTask:`task/deleteTask`,
     updateTask:`task/updateTask`,
-    googleLogin:`auth/google`
+    googleLogin:`auth/google`,
+    userDetails:`user/userDetails`,
 }
