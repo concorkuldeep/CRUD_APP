@@ -56,24 +56,41 @@ const LoginScreen = ({ navigation }) => {
     };
 
     const handleGoogleLogin = async () => {
-        if (googleLoading) {
-            return;
-        }
-
         try {
-            setGoogleLoading(true);
 
-            await GoogleSignin.hasPlayServices();
+            await GoogleSignin.hasPlayServices({
+                showPlayServicesUpdateDialog: true
+            });
 
-            const response = await GoogleSignin.signIn();
+            const response =
+                await GoogleSignin.signIn();
+            if (response.type !== 'success') {
+                return;
+            }
 
-            console.log('GOOGLE RESPONSE:', response);
+            const bodyJson = {
+                idToken:
+                    response.data.idToken
+            }
+
+
+            const loginResponse = await post(ApiPath.googleLogin, bodyJson)
+            await saveTokens(
+                loginResponse.data.token,
+                loginResponse?.data?.refreshToken,
+                loginResponse.data?.user
+            )
+
+            Alert.alert('Success', 'Logged in successfully!');
+            navigation.navigate('Home')
+
 
         } catch (error) {
-            console.log('GOOGLE LOGIN ERROR:', error);
 
-        } finally {
-            setGoogleLoading(false);
+            console.log(
+                'Google Login Error:',
+                error
+            );
         }
     };
 

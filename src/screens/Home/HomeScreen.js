@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -20,6 +19,7 @@ import { useAxios } from '../../customHooks/useAxios';
 import { clearTokens } from '../../services/authService';
 import { ApiPath } from '../../constant/ApiUrl';
 import { formatDate } from '../../constant/constants';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
