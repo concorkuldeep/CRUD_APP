@@ -19,6 +19,7 @@ import { useAxios } from '../../customHooks/useAxios';
 import { clearTokens } from '../../services/authService';
 import { ApiPath } from '../../constant/ApiUrl';
 import { formatDate } from '../../constant/constants';
+import UpdateProfileModal from '../../components/profile/UpdateProfileModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
@@ -38,6 +39,9 @@ const HomeScreen = ({ navigation }) => {
   });
   const [taskErrors, setTaskErrors] = useState({});
   const [isCardFlipped, setIsCardFlipped] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+
 
   // Animation values
   const flipAnimation = useRef(new Animated.Value(0))?.current;
@@ -50,12 +54,21 @@ const HomeScreen = ({ navigation }) => {
     fetchTasks();
   }, []);
 
+  const handleProfileUpdated = updatedUser => {
+    console.log("Updated -->>", updatedUser)
+    setUserData(updatedUser);
+    setShowProfileModal(true);
+  };
+
   const fetchUserProfile = async () => {
     try {
       const response = await get(ApiPath.GetProfileDetail);
       setUserData(response.data?.user);
       const userResponse = await get(ApiPath.userDetails);
-      console.log("User Response : ",userResponse)
+      console.log("Hello ", userResponse?.data?.user?.hasPassword)
+      if (!userResponse?.data?.user?.hasPassword) {
+        handleProfileUpdated(userResponse?.data?.user)
+      }
 
 
     } catch (error) {
@@ -381,344 +394,357 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hello, {userData?.name || 'User'}</Text>
-          <Text style={styles.subtitle}>{tasks.length} tasks</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            onPress={openAddTaskModal}
-            style={styles.addButton}
-          >
-            <Icon name="plus" size={24} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Icon name="logout" size={24} color="#ff3b30" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#007AFF']}
-          />
-        }
-      >
-        {/* 3D Flip Profile Card */}
-        <View style={styles.cardContainer}>
-          <TouchableOpacity
-            style={styles.flipButton}
-            onPress={flipCard}
-            activeOpacity={0.8}
-          >
-            <Animated.View
-              style={[styles.card, styles.cardFront, frontAnimatedStyle]}
-            >
-              {/* Front of Card - Profile Info */}
-              <View style={styles.cardGradient} />
-              <View style={styles.cardContent}>
-                <View style={styles.cardHeader}>
-                  <Icon name="account-circle" size={40} color="#fff" />
-                  <View style={styles.userInfo}>
-                    <Text style={styles.cardName}>{userData?.name || 'User'}</Text>
-                    <Text style={styles.cardRole}>{userData?.role || 'Member'}</Text>
-                  </View>
-                  <View style={styles.flipHint}>
-                    <Icon name="rotate-3d" size={20} color="rgba(255,255,255,0.7)" />
-                    <Text style={styles.flipHintText}>Tap to flip</Text>
-                  </View>
-                </View>
-
-                <View style={styles.cardDivider} />
-
-                <View style={styles.cardDetails}>
-                  <View style={styles.detailRow}>
-                    <Icon name="email" size={16} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.detailText} numberOfLines={1}>
-                      {userData?.email || 'N/A'}
-                    </Text>
-                  </View>
-
-                  <View style={styles.detailRow}>
-                    <Icon name="phone" size={16} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.detailText}>
-                      {userData?.phone || userData?.mobile || 'N/A'}
-                    </Text>
-                  </View>
-
-                  <View style={styles.detailRow}>
-                    <Icon name="calendar" size={16} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.detailText}>
-                      Joined {formatDate(userData?.createdAt) || 'N/A'}
-                    </Text>
-                  </View>
-                </View>
+    <>
+      <UpdateProfileModal
+        visible={showProfileModal}
+        user={userData}
+        onClose={() => setShowProfileModal(false)}
+        onSuccess={handleProfileUpdated}
+      />
+      <SafeAreaView style={styles.container}>
 
 
-              </View>
-
-              {/* Decorative elements */}
-              <View style={styles.cardPattern}>
-                <View style={styles.patternCircle1} />
-                <View style={styles.patternCircle2} />
-                <View style={styles.patternCircle3} />
-              </View>
-            </Animated.View>
-
-            <Animated.View
-              style={[styles.card, styles.cardBack, backAnimatedStyle]}
-            >
-              {/* Back of Card - Additional Info */}
-              <View style={styles.cardGradientBack} />
-              <View style={styles.cardContent}>
-                <View style={styles.cardHeaderBack}>
-                  <Text style={styles.backTitle}>User Statistics</Text>
-                  <Icon name="chart-line" size={40} color="#fff" />
-                </View>
-
-                <View style={styles.statsContainer}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{tasks.length}</Text>
-                    <Text style={styles.statLabel}>Total Tasks</Text>
-                  </View>
-
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>
-                      {tasks.filter(t => t.status === 'completed').length}
-                    </Text>
-                    <Text style={styles.statLabel}>Completed</Text>
-                  </View>
-
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>
-                      {tasks.filter(t => t.status === 'pending').length}
-                    </Text>
-                    <Text style={styles.statLabel}>Pending</Text>
-                  </View>
-                </View>
-
-                <View style={styles.cardDividerBack} />
-
-                <View style={styles.additionalInfo}>
-                  <View style={styles.infoRow}>
-                    <Icon name="clock-outline" size={16} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.infoText}>
-                      Last Login: Today
-                    </Text>
-                  </View>
-
-                  <View style={styles.infoRow}>
-                    <Icon name="shield-check" size={16} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.infoText}>
-                      Account: Verified
-                    </Text>
-                  </View>
-
-                  <View style={styles.infoRow}>
-                    <Icon name="star" size={16} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.infoText}>
-                      Member Since: {new Date(userData?.createdAt).getFullYear() || '2024'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.cardFooterBack}>
-                  <Text style={styles.backHint}>Flip to front</Text>
-                  <Text style={styles.cardIdBack}>ID: {userData?._id?.substring(0, 8) || 'USER'}</Text>
-                </View>
-              </View>
-
-              {/* Decorative elements for back */}
-              <View style={styles.cardPatternBack}>
-                <View style={styles.patternLine1} />
-                <View style={styles.patternLine2} />
-                <View style={styles.patternLine3} />
-              </View>
-
-              {/* Magnetic strip */}
-              <View style={styles.magneticStrip} />
 
 
-            </Animated.View>
-          </TouchableOpacity>
-
-          {/* Flip instruction */}
-          <View style={styles.flipInstruction}>
-            <Icon name="gesture-tap" size={16} color="#666" />
-            <Text style={styles.flipInstructionText}>
-              Tap card to {isCardFlipped ? 'see profile' : 'view statistics'}
-            </Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Hello, {userData?.name || 'User'}</Text>
+            <Text style={styles.subtitle}>{tasks.length} tasks</Text>
           </View>
-        </View>
-
-        {/* Tasks Section */}
-        <View style={styles.tasksSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Your Tasks</Text>
-            <TouchableOpacity onPress={fetchTasks}>
-              <Icon name="refresh" size={20} color="#666" />
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={openAddTaskModal}
+              style={styles.addButton}
+            >
+              <Icon name="plus" size={24} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Icon name="logout" size={24} color="#ff3b30" />
             </TouchableOpacity>
           </View>
-
-          {loading ? (
-            <ActivityIndicator size="large" color="#007AFF" style={styles.loadingTasks} />
-          ) : tasks.length === 0 ? (
-            <View style={styles.emptyTasks}>
-              <Icon name="clipboard-text-outline" size={60} color="#ccc" />
-              <Text style={styles.emptyText}>No tasks yet</Text>
-              <Text style={styles.emptySubtext}>Tap + to add your first task</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={tasks}
-              keyExtractor={(_, index) => index}
-              renderItem={renderTaskItem}
-              scrollEnabled={false}
-              contentContainerStyle={styles.taskList}
-            />
-          )}
         </View>
-      </ScrollView>
 
-      {/* Add/Edit Task Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={taskModalVisible}
-        onRequestClose={() => {
-          setTaskModalVisible(false);
-          resetTaskForm();
-        }}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {selectedTask ? 'Edit Task' : 'Add New Task'}
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#007AFF']}
+            />
+          }
+        >
+          {/* 3D Flip Profile Card */}
+          <View style={styles.cardContainer}>
+            <TouchableOpacity
+              style={styles.flipButton}
+              onPress={flipCard}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={[styles.card, styles.cardFront, frontAnimatedStyle]}
+              >
+                {/* Front of Card - Profile Info */}
+                <View style={styles.cardGradient} />
+                <View style={styles.cardContent}>
+                  <View style={styles.cardHeader}>
+                    <Icon name="account-circle" size={40} color="#fff" />
+                    <View style={styles.userInfo}>
+                      <Text style={styles.cardName}>{userData?.name || 'User'}</Text>
+                      <Text style={styles.cardRole}>{userData?.role || 'Member'}</Text>
+                    </View>
+                    <View style={styles.flipHint}>
+                      <Icon name="rotate-3d" size={20} color="rgba(255,255,255,0.7)" />
+                      <Text style={styles.flipHintText}>Tap to flip</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.cardDivider} />
+
+                  <View style={styles.cardDetails}>
+                    <View style={styles.detailRow}>
+                      <Icon name="email" size={16} color="rgba(255,255,255,0.8)" />
+                      <Text style={styles.detailText} numberOfLines={1}>
+                        {userData?.email || 'N/A'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.detailRow}>
+                      <Icon name="phone" size={16} color="rgba(255,255,255,0.8)" />
+                      <Text style={styles.detailText}>
+                        {userData?.phone || userData?.mobile || 'N/A'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.detailRow}>
+                      <Icon name="calendar" size={16} color="rgba(255,255,255,0.8)" />
+                      <Text style={styles.detailText}>
+                        Joined {formatDate(userData?.createdAt) || 'N/A'}
+                      </Text>
+                    </View>
+                  </View>
+
+
+                </View>
+
+                {/* Decorative elements */}
+                <View style={styles.cardPattern}>
+                  <View style={styles.patternCircle1} />
+                  <View style={styles.patternCircle2} />
+                  <View style={styles.patternCircle3} />
+                </View>
+              </Animated.View>
+
+              <Animated.View
+                style={[styles.card, styles.cardBack, backAnimatedStyle]}
+              >
+                {/* Back of Card - Additional Info */}
+                <View style={styles.cardGradientBack} />
+                <View style={styles.cardContent}>
+                  <View style={styles.cardHeaderBack}>
+                    <Text style={styles.backTitle}>User Statistics</Text>
+                    <Icon name="chart-line" size={40} color="#fff" />
+                  </View>
+
+                  <View style={styles.statsContainer}>
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>{tasks.length}</Text>
+                      <Text style={styles.statLabel}>Total Tasks</Text>
+                    </View>
+
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>
+                        {tasks.filter(t => t.status === 'completed').length}
+                      </Text>
+                      <Text style={styles.statLabel}>Completed</Text>
+                    </View>
+
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>
+                        {tasks.filter(t => t.status === 'pending').length}
+                      </Text>
+                      <Text style={styles.statLabel}>Pending</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.cardDividerBack} />
+
+                  <View style={styles.additionalInfo}>
+                    <View style={styles.infoRow}>
+                      <Icon name="clock-outline" size={16} color="rgba(255,255,255,0.8)" />
+                      <Text style={styles.infoText}>
+                        Last Login: Today
+                      </Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <Icon name="shield-check" size={16} color="rgba(255,255,255,0.8)" />
+                      <Text style={styles.infoText}>
+                        Account: Verified
+                      </Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <Icon name="star" size={16} color="rgba(255,255,255,0.8)" />
+                      <Text style={styles.infoText}>
+                        Member Since: {new Date(userData?.createdAt).getFullYear() || '2024'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.cardFooterBack}>
+                    <Text style={styles.backHint}>Flip to front</Text>
+                    <Text style={styles.cardIdBack}>ID: {userData?._id?.substring(0, 8) || 'USER'}</Text>
+                  </View>
+                </View>
+
+                {/* Decorative elements for back */}
+                <View style={styles.cardPatternBack}>
+                  <View style={styles.patternLine1} />
+                  <View style={styles.patternLine2} />
+                  <View style={styles.patternLine3} />
+                </View>
+
+                {/* Magnetic strip */}
+                <View style={styles.magneticStrip} />
+
+
+              </Animated.View>
+            </TouchableOpacity>
+
+            {/* Flip instruction */}
+            <View style={styles.flipInstruction}>
+              <Icon name="gesture-tap" size={16} color="#666" />
+              <Text style={styles.flipInstructionText}>
+                Tap card to {isCardFlipped ? 'see profile' : 'view statistics'}
               </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setTaskModalVisible(false);
-                  resetTaskForm();
-                }}
-              >
-                <Icon name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalBody}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Title *</Text>
-                <TextInput
-                  style={[styles.input, taskErrors.title && styles.inputError]}
-                  placeholder="Enter task title"
-                  value={taskForm.title}
-                  onChangeText={(text) => {
-                    setTaskForm(prev => ({ ...prev, title: text }));
-                    if (taskErrors.title) setTaskErrors(prev => ({ ...prev, title: '' }));
-                  }}
-                />
-                {taskErrors.title && <Text style={styles.errorText}>{taskErrors.title}</Text>}
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Description *</Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    styles.textArea,
-                    taskErrors.description && styles.inputError
-                  ]}
-                  placeholder="Enter task description"
-                  value={taskForm.description}
-                  onChangeText={(text) => {
-                    setTaskForm(prev => ({ ...prev, description: text }));
-                    if (taskErrors.description) setTaskErrors(prev => ({ ...prev, description: '' }));
-                  }}
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
-                {taskErrors.description && <Text style={styles.errorText}>{taskErrors.description}</Text>}
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Status</Text>
-                <View style={styles.radioGroup}>
-                  {['pending', 'completed'].map((status) => (
-                    <TouchableOpacity
-                      key={status}
-                      style={styles.radioOption}
-                      onPress={() => setTaskForm(prev => ({ ...prev, status }))}
-                    >
-                      <Icon
-                        name={taskForm.status === status ? 'radiobox-marked' : 'radiobox-blank'}
-                        size={20}
-                        color={getStatusColor(status)}
-                      />
-                      <Text style={styles.radioLabel}>{status.toUpperCase()}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Priority</Text>
-                <View style={styles.radioGroup}>
-                  {['low', 'medium', 'high'].map((priority) => (
-                    <TouchableOpacity
-                      key={priority}
-                      style={styles.radioOption}
-                      onPress={() => setTaskForm(prev => ({ ...prev, priority }))}
-                    >
-                      <Icon
-                        name={taskForm.priority === priority ? 'radiobox-marked' : 'radiobox-blank'}
-                        size={20}
-                        color={getPriorityColor(priority)}
-                      />
-                      <Text style={styles.radioLabel}>{priority.toUpperCase()}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => {
-                  setTaskModalVisible(false);
-                  resetTaskForm();
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={selectedTask ? handleUpdateTask : handleCreateTask}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.saveButtonText}>
-                    {selectedTask ? 'Update Task' : 'Add Task'}
-                  </Text>
-                )}
-              </TouchableOpacity>
             </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+
+          {/* Tasks Section */}
+          <View style={styles.tasksSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Your Tasks</Text>
+              <TouchableOpacity onPress={fetchTasks}>
+                <Icon name="refresh" size={20} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {loading ? (
+              <ActivityIndicator size="large" color="#007AFF" style={styles.loadingTasks} />
+            ) : tasks.length === 0 ? (
+              <View style={styles.emptyTasks}>
+                <Icon name="clipboard-text-outline" size={60} color="#ccc" />
+                <Text style={styles.emptyText}>No tasks yet</Text>
+                <Text style={styles.emptySubtext}>Tap + to add your first task</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={tasks}
+                keyExtractor={(_, index) => index}
+                renderItem={renderTaskItem}
+                scrollEnabled={false}
+                contentContainerStyle={styles.taskList}
+              />
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Add/Edit Task Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={taskModalVisible}
+          onRequestClose={() => {
+            setTaskModalVisible(false);
+            resetTaskForm();
+          }}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {selectedTask ? 'Edit Task' : 'Add New Task'}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setTaskModalVisible(false);
+                    resetTaskForm();
+                  }}
+                >
+                  <Icon name="close" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.modalBody}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Title *</Text>
+                  <TextInput
+                    style={[styles.input, taskErrors.title && styles.inputError]}
+                    placeholder="Enter task title"
+                    value={taskForm.title}
+                    onChangeText={(text) => {
+                      setTaskForm(prev => ({ ...prev, title: text }));
+                      if (taskErrors.title) setTaskErrors(prev => ({ ...prev, title: '' }));
+                    }}
+                  />
+                  {taskErrors.title && <Text style={styles.errorText}>{taskErrors.title}</Text>}
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Description *</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.textArea,
+                      taskErrors.description && styles.inputError
+                    ]}
+                    placeholder="Enter task description"
+                    value={taskForm.description}
+                    onChangeText={(text) => {
+                      setTaskForm(prev => ({ ...prev, description: text }));
+                      if (taskErrors.description) setTaskErrors(prev => ({ ...prev, description: '' }));
+                    }}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                  />
+                  {taskErrors.description && <Text style={styles.errorText}>{taskErrors.description}</Text>}
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Status</Text>
+                  <View style={styles.radioGroup}>
+                    {['pending', 'completed'].map((status) => (
+                      <TouchableOpacity
+                        key={status}
+                        style={styles.radioOption}
+                        onPress={() => setTaskForm(prev => ({ ...prev, status }))}
+                      >
+                        <Icon
+                          name={taskForm.status === status ? 'radiobox-marked' : 'radiobox-blank'}
+                          size={20}
+                          color={getStatusColor(status)}
+                        />
+                        <Text style={styles.radioLabel}>{status.toUpperCase()}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Priority</Text>
+                  <View style={styles.radioGroup}>
+                    {['low', 'medium', 'high'].map((priority) => (
+                      <TouchableOpacity
+                        key={priority}
+                        style={styles.radioOption}
+                        onPress={() => setTaskForm(prev => ({ ...prev, priority }))}
+                      >
+                        <Icon
+                          name={taskForm.priority === priority ? 'radiobox-marked' : 'radiobox-blank'}
+                          size={20}
+                          color={getPriorityColor(priority)}
+                        />
+                        <Text style={styles.radioLabel}>{priority.toUpperCase()}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setTaskModalVisible(false);
+                    resetTaskForm();
+                  }}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={selectedTask ? handleUpdateTask : handleCreateTask}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>
+                      {selectedTask ? 'Update Task' : 'Add Task'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
+
+    </>
   );
 };
 
